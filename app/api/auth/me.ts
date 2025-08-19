@@ -4,13 +4,14 @@ import cookie from "cookie";
 export default async (req: NextApiRequest, res: NextApiResponse) => {
   const cookies = cookie.parse(req.headers.cookie || "");
   const accessToken = cookies.access_token;
-
+const API_BASE_URL =
+  process.env.NEXT_PUBLIC_API_BASE_URL || `http://localhost:8080`;
   if (!accessToken) {
     return res.status(401).json({ error: "Unauthorized" });
   }
 
   try {
-    const response = await fetch("http://localhost:8080/auth/user-info", {
+    const response = await fetch(`${API_BASE_URL}/auth/user-info`, {
       headers: { Authorization: `Bearer ${accessToken}` },
     });
 

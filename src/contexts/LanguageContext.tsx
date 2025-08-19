@@ -1,12 +1,6 @@
 "use client";
 
-import React, {
-  createContext,
-  useContext,
-  useState,
-  ReactNode,
-  useEffect,
-} from "react";
+import React, { createContext, useContext, useState, ReactNode } from "react";
 
 type Language = "en" | "sq";
 type TranslationStrings = Record<string, string>;
@@ -15,42 +9,35 @@ interface LanguageContextProps {
   language: Language;
   setLanguage: (lang: Language) => void;
   t: (key: string) => string;
-  loading: boolean;
 }
 
-const LanguageContext = createContext<LanguageContextProps | undefined>(
-  undefined,
-);
+const LanguageContext = createContext<LanguageContextProps | undefined>(undefined);
+
+// Import translations directly instead of fetching them
+import enTranslations from '@/public/locales/en.json';
+import sqTranslations from '@/public/locales/sq.json';
+
+const translations: Record<Language, TranslationStrings> = {
+  en: enTranslations,
+  sq: sqTranslations
+};
 
 export function LanguageProvider({ children }: { children: ReactNode }) {
   const [language, setLanguage] = useState<Language>("sq");
-  const [tStrings, setTStrings] = useState<TranslationStrings>({});
-  const [loading, setLoading] = useState(true);
+  const [tStrings, setTStrings] = useState<TranslationStrings>(translations[language]);
 
-  useEffect(() => {
-    setLoading(true);
-    async function loadTranslations() {
-      try {
-        const response = await fetch(`/locales/${language}.json`);
-        if (!response.ok) throw new Error("Failed to load translations");
-        const json: TranslationStrings = await response.json();
-        setTStrings(json);
-      } catch (error) {
-        console.error(error);
-        setTStrings({});
-      } finally {
-        setLoading(false);
-      }
-    }
-    loadTranslations();
-  }, [language]);
+  // Update translations when language changes
+  const handleSetLanguage = (lang: Language) => {
+    setLanguage(lang);
+    setTStrings(translations[lang]);
+  };
 
   function t(key: string) {
     return tStrings[key] || key;
   }
 
   return (
-    <LanguageContext.Provider value={{ language, setLanguage, t, loading }}>
+    <LanguageContext.Provider value={{ language, setLanguage: handleSetLanguage, t }}>
       {children}
     </LanguageContext.Provider>
   );
